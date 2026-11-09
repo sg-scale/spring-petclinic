@@ -19,6 +19,9 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
@@ -42,6 +45,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 class VisitController {
 
+	private static final Logger logger = LoggerFactory.getLogger(VisitController.class);
+
 	private final OwnerRepository owners;
 
 	public VisitController(OwnerRepository owners) {
@@ -50,6 +55,7 @@ class VisitController {
 
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
+		logger.info("setAllowedFields called");
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
@@ -63,6 +69,7 @@ class VisitController {
 	@ModelAttribute("visit")
 	public Visit loadPetWithVisit(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
 			Map<String, Object> model) {
+		logger.info("loadPetWithVisit called with ownerId={}, petId={}", ownerId, petId);
 		Optional<Owner> optionalOwner = owners.findById(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
@@ -82,6 +89,7 @@ class VisitController {
 
 	@ModelAttribute("minVisitDate")
 	public LocalDate minVisitDate() {
+		logger.info("minVisitDate called");
 		return LocalDate.now().plusDays(1);
 	}
 
@@ -89,6 +97,7 @@ class VisitController {
 	// called
 	@GetMapping("/owners/{ownerId}/pets/{petId}/visits/new")
 	public String initNewVisitForm() {
+		logger.info("initNewVisitForm called");
 		return "pets/createOrUpdateVisitForm";
 	}
 
@@ -97,6 +106,7 @@ class VisitController {
 	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/new")
 	public String processNewVisitForm(@ModelAttribute Owner owner, @PathVariable int petId, @Valid Visit visit,
 			BindingResult result, RedirectAttributes redirectAttributes) {
+		logger.info("processNewVisitForm called with petId={}", petId);
 		if (visit.getDate() != null && !visit.getDate().isAfter(LocalDate.now())) {
 			result.rejectValue("date", "typeMismatch.visitDate");
 		}

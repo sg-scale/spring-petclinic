@@ -17,6 +17,9 @@ package org.springframework.samples.petclinic.vet;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +39,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 class VetController {
 
+	private static final Logger logger = LoggerFactory.getLogger(VetController.class);
+
 	private final VetRepository vetRepository;
 
 	public VetController(VetRepository vetRepository) {
@@ -45,6 +50,7 @@ class VetController {
 	@GetMapping("/vets.html")
 	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model,
 			RedirectAttributes redirectAttributes) {
+		logger.info("showVetList called with page={}", page);
 		Page<Vet> paginated = findPaginated(page);
 		if (page < 1 || page > Math.max(paginated.getTotalPages(), 1)) {
 			redirectAttributes.addAttribute("page", 1);
@@ -71,6 +77,7 @@ class VetController {
 
 	@GetMapping({ "/vets" })
 	public @ResponseBody Vets showResourcesVetList() {
+		logger.info("showResourcesVetList called");
 		// Here we are returning an object of type 'Vets' rather than a collection of Vet
 		// objects so it is simpler for JSon/Object mapping
 		Vets vets = new Vets();
