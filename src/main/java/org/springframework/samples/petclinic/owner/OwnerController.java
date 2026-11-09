@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +51,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 class OwnerController {
 
+	private static final Logger logger = LoggerFactory.getLogger(OwnerController.class);
+
 	private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
 
 	private final OwnerRepository owners;
@@ -58,11 +63,13 @@ class OwnerController {
 
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
+		logger.info("setAllowedFields called");
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
+		logger.info("findOwner called with ownerId={}", ownerId);
 		return ownerId == null ? new Owner()
 				: this.owners.findById(ownerId)
 					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
@@ -71,11 +78,13 @@ class OwnerController {
 
 	@GetMapping("/owners/new")
 	public String initCreationForm() {
+		logger.info("initCreationForm called");
 		return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
 	}
 
 	@PostMapping("/owners/new")
 	public String processCreationForm(@Valid Owner owner, BindingResult result, RedirectAttributes redirectAttributes) {
+		logger.info("processCreationForm called");
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("error", "There was an error in creating the owner.");
 			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
@@ -88,12 +97,14 @@ class OwnerController {
 
 	@GetMapping("/owners/find")
 	public String initFindForm() {
+		logger.info("initFindForm called");
 		return "owners/findOwners";
 	}
 
 	@GetMapping("/owners")
 	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
 			Model model, RedirectAttributes redirectAttributes) {
+		logger.info("processFindForm called with page={}", page);
 		// allow parameterless GET request for /owners to return all records
 		String lastName = owner.getLastName();
 		if (lastName == null) {
@@ -147,12 +158,14 @@ class OwnerController {
 
 	@GetMapping("/owners/{ownerId}/edit")
 	public String initUpdateOwnerForm() {
+		logger.info("initUpdateOwnerForm called");
 		return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
 	}
 
 	@PostMapping("/owners/{ownerId}/edit")
 	public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
 			RedirectAttributes redirectAttributes) {
+		logger.info("processUpdateOwnerForm called with ownerId={}", ownerId);
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
 			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
@@ -177,6 +190,7 @@ class OwnerController {
 	 */
 	@GetMapping("/owners/{ownerId}")
 	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+		logger.info("showOwner called with ownerId={}", ownerId);
 		ModelAndView mav = new ModelAndView("owners/ownerDetails");
 		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(

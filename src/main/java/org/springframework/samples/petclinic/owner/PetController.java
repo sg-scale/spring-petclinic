@@ -20,6 +20,9 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -48,6 +51,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/owners/{ownerId}")
 class PetController {
 
+	private static final Logger logger = LoggerFactory.getLogger(PetController.class);
+
 	private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
 
 	private final OwnerRepository owners;
@@ -61,11 +66,13 @@ class PetController {
 
 	@ModelAttribute("types")
 	public Collection<PetType> populatePetTypes() {
+		logger.info("populatePetTypes called");
 		return this.types.findPetTypes();
 	}
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable("ownerId") int ownerId) {
+		logger.info("findOwner called with ownerId={}", ownerId);
 		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
@@ -75,6 +82,7 @@ class PetController {
 	@ModelAttribute("pet")
 	public Pet findPet(@PathVariable("ownerId") int ownerId,
 			@PathVariable(name = "petId", required = false) Integer petId) {
+		logger.info("findPet called with ownerId={}, petId={}", ownerId, petId);
 
 		if (petId == null) {
 			return new Pet();
@@ -88,17 +96,20 @@ class PetController {
 
 	@InitBinder("owner")
 	public void initOwnerBinder(WebDataBinder dataBinder) {
+		logger.info("initOwnerBinder called");
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
 	@InitBinder("pet")
 	public void initPetBinder(WebDataBinder dataBinder) {
+		logger.info("initPetBinder called");
 		dataBinder.setValidator(new PetValidator());
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
 	@GetMapping("/pets/new")
 	public String initCreationForm(Owner owner, ModelMap model) {
+		logger.info("initCreationForm called");
 		Pet pet = new Pet();
 		owner.addPet(pet);
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
@@ -107,6 +118,7 @@ class PetController {
 	@PostMapping("/pets/new")
 	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
+		logger.info("processCreationForm called");
 
 		if (StringUtils.hasText(pet.getName()) && pet.isNew() && owner.getPet(pet.getName(), true) != null) {
 			result.rejectValue("name", "duplicate", "already exists");
@@ -138,12 +150,14 @@ class PetController {
 
 	@GetMapping("/pets/{petId}/edit")
 	public String initUpdateForm() {
+		logger.info("initUpdateForm called");
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
 	@PostMapping("/pets/{petId}/edit")
 	public String processUpdateForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
+		logger.info("processUpdateForm called");
 
 		String petName = pet.getName();
 
